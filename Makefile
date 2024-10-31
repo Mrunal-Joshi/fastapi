@@ -6,11 +6,11 @@ run_tests:
 
 check_code_style:
 	## pylint
-	pylint --disable=C0114,C0115,C0116 app
+	pylint --disable=C0114,C0115,C0116 social_media
 
 	## black
-	black --check app
+	black --check social_media
 
 	##mypy
-	mypy app
+	mypy social_media
 
