@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 def find_post(posts, path_id):
     print("\n\n", posts, path_id)
     for post in posts:
-        if post["path_id"] == int(path_id):
+        if post["id"] == int(path_id):
             return post
 
     raise HTTPException(
