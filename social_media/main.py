@@ -6,16 +6,18 @@ from random import randint
 from fastapi import FastAPI, status, Response, Depends
 from typing import List
 from social_media.constants import posts
-from social_media import schemas
 from social_media.utilities import find_post
-from . import models
+from . import models, schemas, utils
 from .database import engine, get_db, SessionLocal
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
 app = FastAPI()
 
 #This will create tables in database
 models.Base.metadata.create_all(bind=engine)
+
+
 
 ## API'S
 @app.get("/posts", response_model=List[schemas.Post])
@@ -76,9 +78,20 @@ def delete_post(path_id: int, db : Session = Depends(get_db)):
 #USER APIS
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.DisplayUser)
 def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
+
+    # hash the password - user.password
+    user.password = utils.hash(user.password)
+
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
     return new_user
+
+@app.get("/user/{id}", response_model=schemas.DisplayUser)
+def get_user(id:int, db : Session = Depends(get_db)):
+    user = db.query(models.User).filter_by(id=id).first()
+    if not user:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "User does not exit")
+    return user

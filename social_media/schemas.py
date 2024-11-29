@@ -30,6 +30,7 @@ class CreateUser(BaseModel):
 class DisplayUser(BaseModel):
     id : int
     email : EmailStr
+    created_at : datetime
 
     # Response will be in sqlalchemy model, hence convert it to pydantic model
     class Config:
