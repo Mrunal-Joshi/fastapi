@@ -35,3 +35,7 @@ class DisplayUser(BaseModel):
     # Response will be in sqlalchemy model, hence convert it to pydantic model
     class Config:
         from_attributes = True
+
+class UserLogin(BaseModel):
+    email : EmailStr
+    password : str
