@@ -4,6 +4,8 @@ Data model for posts
 
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
+
 
 class PostBase(BaseModel):
     title: str
@@ -35,3 +37,14 @@ class DisplayUser(BaseModel):
     # Response will be in sqlalchemy model, hence convert it to pydantic model
     class Config:
         from_attributes = True
+
+class UserLogin(BaseModel):
+    email : EmailStr
+    password : str
+
+class Token(BaseModel):
+    access_token : str
+    token_type : str
+
+class TokenData(BaseModel):
+    id : Optional[str] = None

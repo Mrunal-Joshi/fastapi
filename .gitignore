@@ -1,4 +1,23 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore __pycache__ directories
+__pycache__/
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore IDE/editor configuration files
+*.vscode/
+.idea/
+*.swp
+
+# Ignore test result cache
+*.pytest_cache/
+
 /.mypy_cache
-/__pycache__
-/venv
-social_media/__pycache__
+
+
