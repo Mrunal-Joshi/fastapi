@@ -10,21 +10,27 @@ router = APIRouter(prefix="/posts")
 @router.get("/", response_model=List[schemas.Post])
 def getposts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     data = db.query(models.Post).all()
+    # .filter(models.Post.owner_id = current_user.id)
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "No posts found")
     return data
 
 
 @router.get("/{path_id}", response_model=schemas.Post)
 def get_post(path_id: int, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter_by(id=path_id).one_or_none()
-
+    print("\n\n=====", post.owner.__dict__)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "post not found")
+
+    # if post.owner_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "Not authorozed to retrieve post")
     return post
 
 
 @router.post("/", status_code = status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_posts(post: schemas.CreatePost, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    new_post = models.Post(**post.dict())
+    new_post = models.Post(owner_id=current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -37,7 +43,10 @@ def update_post(path_id: int, post_to_update: schemas.CreatePost, db : Session =
 
     post_query = post.first()
     if not post_query:    
-        raise HTTPException(status_code = status.HTTP_204_NO_CONTENT, detail = "Does not exist")
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "Does not exist")
+
+    if post_query.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "Not authorozed to perform update")
 
     post.update(post_to_update.dict(), synchronize_session=False)
     db.commit()
@@ -47,8 +56,15 @@ def update_post(path_id: int, post_to_update: schemas.CreatePost, db : Session =
 @router.delete("/{path_id}", status_code = status.HTTP_204_NO_CONTENT)
 def delete_post(path_id: int, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter_by(id=path_id)
-    if not post.first():    
-        raise HTTPException(status_code = status.HTTP_204_NO_CONTENT, detail = "Does not exist")
-    post.delete()
+
+    post_query = post.first()
+
+    if not post_query:    
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "Does not exist")
+
+    if post_query.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "Not authorozed to perform delete")
+
+    post.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
