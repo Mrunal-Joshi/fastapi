@@ -11,6 +11,7 @@ class PostBase(BaseModel):
     title: str
     content: str
     published: bool = True
+    # user_id: int -- whoever is looged in, take that user id
 
 class CreatePost(PostBase):
     pass
@@ -20,7 +21,7 @@ class CreatePost(PostBase):
 class Post(PostBase):
     id : int
     created_at : datetime
-
+    owner_id : int
     # it will tell the pydantic model to read data even if it's not a dict but any obj with attributes
     class Config:
         from_attributes = True
