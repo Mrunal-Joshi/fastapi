@@ -1,5 +1,5 @@
 from fastapi import status, Response, Depends
-from typing import List
+from typing import List, Optional
 from .. import models, oauth2, schemas
 from ..database import get_db
 from sqlalchemy.orm import Session
@@ -8,8 +8,11 @@ from fastapi import HTTPException, status, APIRouter
 router = APIRouter(prefix="/posts")
 
 @router.get("/", response_model=List[schemas.Post])
-def getposts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    data = db.query(models.Post).all()
+def getposts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), 
+        limit : int = 10, skip : int =0, search : Optional[str] = ""):
+
+    # NOTE - skip/offset will skip first "skip" posts
+    data = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     # .filter(models.Post.owner_id = current_user.id)
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "No posts found")
@@ -19,7 +22,7 @@ def getposts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.
 @router.get("/{path_id}", response_model=schemas.Post)
 def get_post(path_id: int, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter_by(id=path_id).one_or_none()
-    print("\n\n=====", post.owner.__dict__)
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "post not found")
 
