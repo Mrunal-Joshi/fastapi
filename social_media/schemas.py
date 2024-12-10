@@ -47,11 +47,16 @@ class Post(PostBase):
     id : int
     created_at : datetime
     owner : DisplayUser
-    votes : int
     # it will tell the pydantic model to read data even if it's not a dict but any obj with attributes
     class Config:
         from_attributes = True
 
+class PostOut(BaseModel):
+    Post : Post
+    votes : int
+
+    class Config:
+        from_attributes = True
 
 class Votes(BaseModel):
     post_id : int
