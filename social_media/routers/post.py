@@ -4,25 +4,33 @@ from .. import models, oauth2, schemas
 from ..database import get_db
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, APIRouter
+from sqlalchemy import func
+
 
 router = APIRouter(prefix="/posts")
 
-@router.get("/", response_model=List[schemas.Post])
-def getposts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), 
+@router.get("/", response_model=List[schemas.PostOut])
+def get_posts(db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), 
         limit : int = 10, skip : int =0, search : Optional[str] = ""):
 
     # NOTE - skip/offset will skip first "skip" posts
-    data = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    #OLD - data = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     # .filter(models.Post.owner_id = current_user.id)
+
+    # To join votes
+    data = db.query(models.Post, func.count(models.Votes.post_id).label("votes")).join(models.Votes, models.Votes.post_id==models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "No posts found")
     return data
 
 
-@router.get("/{path_id}", response_model=schemas.Post)
+@router.get("/{path_id}", response_model=schemas.PostOut)
 def get_post(path_id: int, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post).filter_by(id=path_id).one_or_none()
+    #post = db.query(models.Post).filter_by(id=path_id).one_or_none()
 
+    #join with votes
+    post_query = db.query(models.Post, func.count(models.Votes.post_id).label("votes")).join(models.Votes, models.Votes.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id==path_id)
+    post = post_query.first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "post not found")
 
