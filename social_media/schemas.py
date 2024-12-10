@@ -5,6 +5,8 @@ Data model for posts
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+from pydantic.types import conint
+
 
 class CreateUser(BaseModel):
     email : EmailStr
@@ -45,6 +47,12 @@ class Post(PostBase):
     id : int
     created_at : datetime
     owner : DisplayUser
+    votes : int
     # it will tell the pydantic model to read data even if it's not a dict but any obj with attributes
     class Config:
         from_attributes = True
+
+
+class Votes(BaseModel):
+    post_id : int
+    vote_dir : conint(ge=0, le=1)

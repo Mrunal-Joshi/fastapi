@@ -25,6 +25,7 @@ def get_post(path_id: int, db : Session = Depends(get_db), current_user: int = D
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "post not found")
+    post.votes = db.query(models.Votes).filter(models.Votes.post_id==path_id).count()
 
     # if post.owner_id != current_user.id:
     #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "Not authorozed to retrieve post")
